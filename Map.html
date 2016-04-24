@@ -153,11 +153,14 @@
                 console.log(data);
                 feature.properties.breezometer_aqi = data.breezometer_aqi;
                 feature.properties.mainPollutent = data.dominant_pollutant_description;
-                if (data.breezometer_aqi < 100) {
-                    sStyle = 'normal';
-                } else {
-                    sStyle = 'alert';
-                }
+                 if (data.breezometer_aqi < 50) {
+                        sStyle = 'normal';
+                    } else if(data.breezometer_aqi < 100) {
+                        sStyle = 'moderate';
+                    }
+                    else{
+                         sStyle = 'alert';
+                    }
                 getRefData(feature.properties.stop_id);
                 var sText = '';
 
