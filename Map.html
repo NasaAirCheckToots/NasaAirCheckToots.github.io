@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset='utf-8' />
+    <title></title>
+    <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+    <link rel="stylesheet" href="bootstrap/css/bootstrap.min.css">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css">
+    <!-- Ionicons -->
+    <link rel="stylesheet" href="https://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css">
+    <!-- Theme style -->
+    <link rel="stylesheet" href="dist/css/AdminLTE.min.css">
+    <!-- AdminLTE Skins. Choose a skin from the css/skins
+         folder instead of downloading all of them to reduce the load. -->
+    <link rel="stylesheet" href="dist/css/skins/_all-skins.min.css">
+    <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v0.17.0/mapbox-gl.js'></script>
+    <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.17.0/mapbox-gl.css' rel='stylesheet' />
+    <script src='https://cdn.firebase.com/js/client/2.2.1/firebase.js'></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+        }
+        
+        #map {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 100%;
+            height: 95%;
+        }
+        
+        #alert {
+            background-color: red;
+            color: white;
+        }
+        
+        #normal {
+            background-color: lawngreen;
+            color: black;
+        }
+        
+        #TeamName {
+            position: absolute;
+        }
+        #moderate {
+            background-color: yellow;
+            color: black;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id='map'></div>
+    <script type="text/javascript" src="plugins/jQuery/jQuery-2.1.4.min.js"></script>
+      <script src="http://cdn.leafletjs.com/leaflet-0.7.5/leaflet.js"></script>
+    <script>
+        var myDataRef = new Firebase('https://sizzling-heat-670.firebaseio.com/Nasa');
+        var secretToken = 'sk.eyJ1Ijoia2FyZmFzYW5raGEiLCJhIjoiY2ltM2Y0ZWVuMDBhNjVsa3NoNWNpdzh4MCJ9.VjzIcLWaHziwLDMU530keQ';
+
+        mapboxgl.accessToken = 'pk.eyJ1Ijoia2FyZmFzYW5raGEiLCJhIjoiY2lsaTIzb25yMDA3M3ZrbHphNjljbDBnMiJ9.fFo6kZOvxhMdp-uWmLvDUA';
+        
+        
+        var geojsonData = 'MTA.geojson';
+        var map = new mapboxgl.Map({
+            container: 'map'
+            , style: 'mapbox://styles/mapbox/streets-v8'
+            , zoom: 16
+            , center: [-73.886063, 40.880341]
+        });
+        var api, sStyle;
+        var answers= {
+            issue1 : 0,
+            issue2 : 0,
+            issue3 : 0,
+            issue4 : 0,
+            issue5 : 0
+        };
+        var codelist={
+            issue1 :'Acute Cough Symptoms',
+            issue2 : 'Shortness of Breath',
+            issue3 : 'More Wheezing & Sneezing',
+            issue4 : 'Nasal Obstruction',
+            issue5 : 'Itchy Eyes'
+        }
+            
+        map.on('load', function () {
+            map.addSource('MTA-DATA', {
+                "type": "geojson"
+                , "data": geojsonData
+            });
+            map.addLayer({
+                "id": "MTA-DATA"
+                , "type": "symbol"
+                , "source": "MTA-DATA"
+                , "layout": {
+                    "icon-image": "bus-15"
+                    , "icon-allow-overlap": true
+                }
+                , "interactive": true
+
+            });
+        //      var OSM_URL = 'http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'; 
+        // var OSM_ATTRIB = '&copy; <a href="http://openstreetmap.org/copyright">OpenStreetMap</a> contributors'; 
+        // var osmLayer = L.tileLayer(OSM_URL, {attribution: OSM_ATTRIB});
+        // var WAQI_URL  = "http://tiles.aqicn.org/tiles/usepa-aqi/{z}/{x}/{y}.png?token=0b7e9e6550d0bdebba581a453c91c2204562b704"; 
+        // var WAQI_ATTR = 'Air Quality Tiles &copy; <a href="http://waqi.info">waqi.info</a>'; 
+        // var waqiLayer = L.tileLayer(WAQI_URL, {attribution: WAQI_ATTR}); 
+        // map.addLayer(waqiLayer); 
+        
+        });
+        map.addControl(new mapboxgl.Navigation({position: 'top-left'}));
+
+        map.on('click', function (e) {
+            var features = map.queryRenderedFeatures(e.point, {
+                layers: ['MTA-DATA']
+            });
+            api = "https://api.breezometer.com/baqi/?lat=" + e.lngLat.lat + "&lon=" + e.lngLat.lng + "&fields=country_aqi,dominant_pollutant_canonical_name,dominant_pollutant_text,dominant_pollutant_description,breezometer_aqi,country_name,datetime&key=936788749b4a44bd88b2a04af1192998";
+
+            if (!features.length) {
+
+
+                $.getJSON(api, function (data) {
+
+                    if (data.breezometer_aqi < 50) {
+                        sStyle = 'normal';
+                    } else if(data.breezometer_aqi < 100) {
+                        sStyle = 'moderate';
+                    }
+                    else{
+                         sStyle = 'alert';
+                    }
+                    var popup = new mapboxgl.Popup()
+                        .setLngLat(e.lngLat)
+                        .setHTML('<div id="' + sStyle + '"> Air Quality Index:' + data.breezometer_aqi + '</div>')
+                        .addTo(map);
+                });
+
+                return;
+            }
+
+            var feature = features[0];
+            //console.log(e);
+            // Populate the popup and set its coordinates
+            // based on the feature found.
+
+            console.log(e);
+            $.getJSON(api, function (data) {
+
+                console.log(data);
+                feature.properties.breezometer_aqi = data.breezometer_aqi;
+                feature.properties.mainPollutent = data.dominant_pollutant_description;
+                if (data.breezometer_aqi < 100) {
+                    sStyle = 'normal';
+                } else {
+                    sStyle = 'alert';
+                }
+                getRefData(feature.properties.stop_id);
+                var sText = '';
+
+
+                
+                var popup = new mapboxgl.Popup()
+                    .setLngLat(feature.geometry.coordinates)
+                    .setHTML('<div id="' + sStyle + '"><input type="hidden" id="stop_id" value=' + feature.properties.stop_id + '><span id="stationId" style="font-weight : 600; ">' + feature.properties.stop_name + '</span> <br> Air Quality Index : ' + feature.properties.breezometer_aqi + '<br><span>Dominent Pollutant : ' + feature.properties.mainPollutent + '</span> </div><div id="feel"></div>' + 'How are you feeling here? <br> <div id="userInfo"><form action="submit"><input type="checkbox" id="issue1"/> Acute Cough Symptoms <br> <input type="checkbox" id="issue2"/> Shortness of Breath <br><input type="checkbox" id="issue3"/> More Wheezing & Sneezing <br><input type="checkbox" id="issue4"/> Nasal Obstruction <br><input type="checkbox" id="issue5"/>  Itchy Eyes <br><input type="button" value="Submit" onclick="SubmitFeedback(this)" /></form></div>')
+                    .addTo(map);
+
+                var sortable = [];
+                for (var key in answers)
+                      sortable.push([key, answers[key]])
+                sortable.sort(function(a, b) {return a[1] - b[1]})
+
+                console.log(codelist[sortable[4][0]]);
+                // if(sortable[4][1]!=0){
+                    mydiv = document.getElementById("feel");
+                mydiv.innerHTML += "People are having " + codelist[sortable[4][0]];
+                // }
+            });
+        });
+
+        map.on('mousemove', function (e) {
+            var features = map.queryRenderedFeatures(e.point, {
+                layers: ['MTA-DATA']
+            });
+            map.getCanvas().style.cursor = (features.length) ? 'pointer' : '';
+        });
+        //add function over here for on click
+        function SubmitFeedback(stnName, elem) {
+            var key = document.getElementById("stop_id").value;
+            pushToFirebase(key, checkboxValues());
+            $(".mapboxgl-popup-close-button").trigger("click");
+        }
+
+        function checkboxValues() {
+            var chbox;
+            var i;
+            for (i = 1; i < 5; i++) {
+                chbox = document.getElementById("issue" + i);
+                if (chbox.checked === true) {
+                    answers["issue" + i]++;
+                }
+            }
+            return answers;
+        }
+    
+       
+
+        function pushToFirebase(key, answers) {
+
+            var myDataRef = new Firebase('https://sizzling-heat-670.firebaseio.com/Nasa');
+            myDataRef.child(key).set(answers);
+
+        }
+
+        function getRefData(key) {
+            var ref = myDataRef.child(key);
+            ref.on("value", function (snapshot) {
+
+                if (!snapshot.val()) {
+                    //init
+                    myDataRef.child(key).set(answers);
+
+                } else {
+                    //retrive
+                    answers = snapshot.val();
+                }
+            }, function (errorObject) {
+                console.log("The read failed: " + errorObject.code);
+            });
+        }
+    </script>
+
+
+
+</body>
+
+</html>

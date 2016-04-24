@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='utf-8' />
+    <title></title>
+    <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+     <link rel="stylesheet" href="bootstrap/css/bootstrap.min.css">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css">
+    <!-- Ionicons -->
+    <link rel="stylesheet" href="https://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css">
+    <!-- Theme style -->
+    <link rel="stylesheet" href="dist/css/AdminLTE.min.css">
+    <!-- AdminLTE Skins. Choose a skin from the css/skins
+         folder instead of downloading all of them to reduce the load. -->
+    <link rel="stylesheet" href="dist/css/skins/_all-skins.min.css">
+    <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v0.17.0/mapbox-gl.js'></script>
+    <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.17.0/mapbox-gl.css' rel='stylesheet' />
+    <style>
+        body { margin:0; padding:0; }
+        #map { position:absolute; top:0; bottom:0; width:100%; height:95%; }
+        #buttonStop { position: relative; }
+    </style>
+</head>
+<body>
+
+<div id='map'></div>
+<!-- <div id='buttonStop'>
+              <a id="Stop"><i class="fa fa-circle-o" ></i> Show Stops </a>
+              </div> -->
+  <script type="text/javascript" src="plugins/jQuery/jQuery-2.1.4.min.js"></script>
+  <script>
+        var secretToken = 'sk.eyJ1Ijoia2FyZmFzYW5raGEiLCJhIjoiY2ltM2Y0ZWVuMDBhNjVsa3NoNWNpdzh4MCJ9.VjzIcLWaHziwLDMU530keQ';
+
+        mapboxgl.accessToken = 'pk.eyJ1Ijoia2FyZmFzYW5raGEiLCJhIjoiY2lsaTIzb25yMDA3M3ZrbHphNjljbDBnMiJ9.fFo6kZOvxhMdp-uWmLvDUA';
+        var geojsonData = 'MTA.geojson';
+        var map = new mapboxgl.Map({
+            container: 'map',
+            style: 'mapbox://styles/mapbox/streets-v8',
+            zoom: 16,
+            center: [-73.886063,40.880341]
+        });
+           map.on('load', function () {
+                map.addSource('MTA-DATA', {
+                    "type": "geojson",
+                    "data": geojsonData
+                });
+                map.addLayer({
+                "id": "MTA-DATA",
+                "source": "MTA-DATA",
+                "type": "circle",
+                "paint": {
+                    "circle-radius": 4,
+                    "circle-color": "green",
+                },
+                "interactive": true
+
+            });
+          });
+           
+           
+    </script>
+
+</body>
+</html>
